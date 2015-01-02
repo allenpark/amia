@@ -19,6 +19,9 @@ var Game = function() {
     game.cursorOn = true;
     game.playerNames = ['player1', 'player2', 'player3', 'player4'];
     game.focusOn = 0;
+    game.menuOn = false;
+    game.menuSelect = 0;
+    game.menuOptions = ['menu0', 'menu1', 'menu2', 'menu3'];
     var spriteNames = {'player1': 'img/sprite01112.png',
                         'player2': 'img/sword.png',
                         'player3': 'img/person.png',
@@ -42,6 +45,16 @@ var Game = function() {
             game.sprites[spriteName] = sprite;
         }
     }
+};
+
+Game.prototype.playerOn = function(game, x, y) {
+    for (pnn in game.playerNames) {
+        var pn = game.playerNames[pnn];
+        if (game.players[pn].x == x && game.players[pn].y == y) {
+            return pnn;
+        }
+    }
+    return -1;
 };
 
 Game.prototype.onLoadedSprites = function(game) {
@@ -69,38 +82,50 @@ Game.prototype.onKeyPress = function(e) {
     var game = e.data;
     var key = e.keyCode || e.which;
     console.log('Key ' + key + ' has been pressed.');
-    var actionTaken = false;
-    if (key == 87 || key == 119) { // up
-        if (game.cursorY > 0 && this.board[game.cursorX][game.cursorY - 1]) {
-            game.cursorY -= 1;
-            actionTaken = true;
+    var actionTaken = true;
+    if (key == 87 || key == 119) { // W or w = up
+        if (game.menuOn) {
+            var mol = game.menuOptions.length;
+            game.menuSelect = (game.menuSelect + mol - 1) % mol;
+        } else {
+            if (game.cursorY > 0 && this.board[game.cursorX][game.cursorY - 1]) {
+                game.cursorY -= 1;
+            }
         }
-    } else if (key == 83 || key == 115) { // down
-        if (game.cursorY < game.boardHeight - 1 && this.board[game.cursorX][game.cursorY + 1]) {
-            game.cursorY += 1;
-            actionTaken = true;
+    } else if (key == 83 || key == 115) { // S or s = down
+        if (game.menuOn) {
+            game.menuSelect = (game.menuSelect + 1) % game.menuOptions.length;
+        } else {
+            if (game.cursorY < game.boardHeight - 1 && this.board[game.cursorX][game.cursorY + 1]) {
+                game.cursorY += 1;
+            }
         }
-    } else if (key == 65 || key == 97) { // left
+    } else if (key == 65 || key == 97) { // A or a = left
         if (game.cursorX > 0 && this.board[game.cursorX - 1][game.cursorY]) {
             game.cursorX -= 1;
-            actionTaken = true;
         }
-    } else if (key == 68 || key == 100) { // right
+    } else if (key == 68 || key == 100) { // D or d = right
         if (game.cursorX < game.boardWidth - 1 && this.board[game.cursorX + 1][game.cursorY]) {
             game.cursorX += 1;
-            actionTaken = true;
         }
-    } else if (key == 13) { // enter
-        game.players[game.playerNames[game.focusOn]].x = game.cursorX;
-        game.players[game.playerNames[game.focusOn]].y = game.cursorY;
-        actionTaken = true;
-    } else if (key == 113) {
+    } else if (key == 13) { // enter = move or select
+        var pnn = game.playerOn(game, game.cursorX, game.cursorY);
+        if (pnn == -1) {
+            var focused = game.players[game.playerNames[game.focusOn]];
+            focused.x = game.cursorX;
+            focused.y = game.cursorY;
+        } else {
+            game.focusOn = pnn;
+        }
+    } else if (key == 113) { // q = rotate left
         game.focusOn = (game.focusOn + 1) % game.playerNames.length;
-        actionTaken = true;
-    } else if (key == 101) {
+    } else if (key == 101) { // e = rotate right
         var pnl = game.playerNames.length;
         game.focusOn = (game.focusOn + pnl - 1) % pnl;
-        actionTaken = true;
+    } else if (key == 34 || key == 39) { // ' or " = menu toggle
+        game.menuOn = !game.menuOn;
+    } else {
+        actionTaken = false;
     }
     if (actionTaken) {
         game.drawBoard(game);
@@ -129,6 +154,42 @@ Game.prototype.drawBoard = function(game) {
     }
     if (game.cursorOn) {
         game.ctx.drawImage(game.sprites['cursor'], game.cursorX * game.pixelWidth / game.boardWidth, game.cursorY * game.pixelHeight / game.boardHeight);
+    }
+    if (game.menuOn) {
+        var menuWidth = 80;
+        var menuXBuffer = 10;
+        var menuYBuffer = 10;
+        game.ctx.beginPath();
+        game.ctx.fillStyle = 'white';
+        game.ctx.fillRect(game.pixelWidth - menuWidth - menuXBuffer,
+            menuYBuffer,
+            menuWidth,
+            game.pixelHeight - menuYBuffer * 2);
+        game.ctx.beginPath();
+        game.ctx.lineWidth = '8';
+        game.ctx.strokeStyle = 'red';
+        game.ctx.rect(game.pixelWidth - menuWidth - menuXBuffer,
+            menuYBuffer,
+            menuWidth,
+            game.pixelHeight - menuYBuffer * 2);
+        game.ctx.stroke();
+        game.ctx.beginPath();
+        for (mon in game.menuOptions) {
+            var mo = game.menuOptions[mon];
+            game.ctx.font = '18px Times New Roman';
+            game.ctx.fillStyle = 'black';
+            game.ctx.fillText(mo, 
+                game.pixelWidth - menuWidth - menuXBuffer + 13,
+                menuYBuffer + 25 + mon * 25);
+        }
+        game.ctx.beginPath();
+        game.ctx.lineWidth = '2';
+        game.ctx.strokeStyle = 'black';
+        game.ctx.rect(game.pixelWidth - menuWidth - menuXBuffer + 8,
+            menuYBuffer + 8 + game.menuSelect * 25,
+            64,
+            23);
+        game.ctx.stroke();
     }
 };
 
