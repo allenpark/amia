@@ -88,7 +88,7 @@ Game.prototype.onKeyPress = function(e) {
             var mol = game.menuOptions.length;
             game.menuSelect = (game.menuSelect + mol - 1) % mol;
         } else {
-            if (game.cursorY > 0 && this.board[game.cursorX][game.cursorY - 1]) {
+            if (game.cursorY > 0) {
                 game.cursorY -= 1;
             }
         }
@@ -96,24 +96,30 @@ Game.prototype.onKeyPress = function(e) {
         if (game.menuOn) {
             game.menuSelect = (game.menuSelect + 1) % game.menuOptions.length;
         } else {
-            if (game.cursorY < game.boardHeight - 1 && this.board[game.cursorX][game.cursorY + 1]) {
+            if (game.cursorY < game.boardHeight - 1) {
                 game.cursorY += 1;
             }
         }
     } else if (key == 65 || key == 97) { // A or a = left
-        if (game.cursorX > 0 && this.board[game.cursorX - 1][game.cursorY]) {
-            game.cursorX -= 1;
+        if (!game.menuOn) {
+            if (game.cursorX > 0) {
+                game.cursorX -= 1;
+            }
         }
     } else if (key == 68 || key == 100) { // D or d = right
-        if (game.cursorX < game.boardWidth - 1 && this.board[game.cursorX + 1][game.cursorY]) {
-            game.cursorX += 1;
+        if (!game.menuOn) {
+            if (game.cursorX < game.boardWidth - 1) {
+                game.cursorX += 1;
+            }
         }
     } else if (key == 13) { // enter = move or select
         var pnn = game.playerOn(game, game.cursorX, game.cursorY);
         if (pnn == -1) {
-            var focused = game.players[game.playerNames[game.focusOn]];
-            focused.x = game.cursorX;
-            focused.y = game.cursorY;
+            if (this.board[game.cursorX][game.cursorY]) {
+                var focused = game.players[game.playerNames[game.focusOn]];
+                focused.x = game.cursorX;
+                focused.y = game.cursorY;
+            }
         } else {
             game.focusOn = pnn;
         }
