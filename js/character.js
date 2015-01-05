@@ -3,6 +3,7 @@ var Character = function(name, sprite) {
     this.sprite = sprite;
     this.x = 0;
     this.y = 0;
+    this.moveTaken = false;
 };
 
 Character.prototype.drawSprite = function(game) {
